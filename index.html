@@ -1,0 +1,1685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pathfinding Algorithm Visualizer - Interactive Edition</title>
+    <style>
+        :root {
+            --cell-size: 28px;
+            --primary: #667eea;
+            --primary-dark: #5a67d8;
+            --secondary: #48bb78;
+            --danger: #f56565;
+            --warning: #ed8936;
+            --dark: #2d3748;
+            --light: #f7fafc;
+            --grid-bg: #e2e8f0;
+            --wall: #1a202c;
+            --start: #48bb78;
+            --target: #f56565;
+            --visited: #9f7aea;
+            --path: #fbbf24;
+            --current: #4299e1;
+            --shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: var(--dark);
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: fadeInDown 0.8s ease;
+        }
+
+        h1 {
+            color: white;
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            letter-spacing: -1px;
+        }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.2rem;
+            font-weight: 300;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 30px;
+            animation: fadeIn 1s ease;
+        }
+
+        .sidebar {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: var(--shadow-lg);
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+
+        .control-section {
+            margin-bottom: 25px;
+        }
+
+        .control-section h3 {
+            color: var(--dark);
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .control-section h3::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: var(--primary);
+            border-radius: 2px;
+        }
+
+        .algorithm-select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--grid-bg);
+            border-radius: 10px;
+            font-size: 1rem;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 10px;
+        }
+
+        .algorithm-select:hover {
+            border-color: var(--primary);
+        }
+
+        .algorithm-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .speed-control {
+            margin-top: 15px;
+        }
+
+        .speed-slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: var(--grid-bg);
+            outline: none;
+            -webkit-appearance: none;
+            margin: 10px 0;
+        }
+
+        .speed-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .speed-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+        }
+
+        .speed-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: #718096;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--light);
+            color: var(--dark);
+            border: 2px solid var(--grid-bg);
+        }
+
+        .btn-secondary:hover {
+            background: var(--grid-bg);
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger) 0%, #e53e3e 100%);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(245, 101, 101, 0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--secondary) 0%, #38a169 100%);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(72, 187, 120, 0.3);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, var(--warning) 0%, #dd6b20 100%);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(237, 137, 54, 0.3);
+        }
+
+        .btn.active {
+            transform: scale(0.95);
+            box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .grid-wrapper {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        #grid {
+            display: grid;
+            grid-template-columns: repeat(30, var(--cell-size));
+            grid-template-rows: repeat(20, var(--cell-size));
+            gap: 2px;
+            background: var(--grid-bg);
+            border-radius: 10px;
+            padding: 10px;
+            margin: 0 auto;
+            width: fit-content;
+        }
+
+        .cell {
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cell::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, transparent 70%);
+            transform: translate(-50%, -50%);
+            transition: all 0.5s ease;
+        }
+
+        .cell:hover::before {
+            width: 100%;
+            height: 100%;
+        }
+
+        .cell.wall {
+            background: linear-gradient(135deg, var(--wall) 0%, #2d3748 100%);
+            transform: scale(0.95);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .cell.start {
+            background: linear-gradient(135deg, var(--start) 0%, #38a169 100%);
+            animation: pulse 2s infinite;
+        }
+
+        .cell.start::after {
+            content: 'S';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+
+        .cell.target {
+            background: linear-gradient(135deg, var(--target) 0%, #e53e3e 100%);
+            animation: pulse 2s infinite;
+        }
+
+        .cell.target::after {
+            content: 'T';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+
+        .cell.visited {
+            background: linear-gradient(135deg, var(--visited) 0%, #805ad5 100%);
+            animation: visitedAnimation 0.5s ease;
+        }
+
+        .cell.path {
+            background: linear-gradient(135deg, var(--path) 0%, #f59e0b 100%);
+            animation: pathAnimation 0.5s ease;
+            z-index: 10;
+        }
+
+        .cell.current {
+            background: linear-gradient(135deg, var(--current) 0%, #3182ce 100%);
+            animation: currentAnimation 0.5s ease;
+            z-index: 11;
+        }
+
+        .cell.hover-start {
+            background: rgba(72, 187, 120, 0.3);
+            border: 2px dashed var(--start);
+        }
+
+        .cell.hover-target {
+            background: rgba(245, 101, 101, 0.3);
+            border: 2px dashed var(--target);
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        @keyframes visitedAnimation {
+            0% {
+                transform: scale(0.3);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes pathAnimation {
+            0% {
+                transform: scale(0.3);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.2);
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes currentAnimation {
+            0% {
+                transform: scale(0.3);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.3);
+                box-shadow: 0 0 20px rgba(66, 153, 225, 0.6);
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--light) 0%, white 100%);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #718096;
+            font-weight: 500;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            margin-top: 25px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 15px;
+            background: var(--light);
+            border-radius: 20px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .legend-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .options-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkbox-wrapper input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .checkbox-wrapper label {
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+
+        .algorithm-info {
+            background: var(--light);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            color: #4a5568;
+        }
+
+        .mode-indicator {
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-weight: 600;
+            display: none;
+            animation: slideDown 0.3s ease;
+        }
+
+        .mode-indicator.active {
+            display: block;
+        }
+
+        .mode-indicator.wall-mode {
+            background: rgba(26, 32, 44, 0.1);
+            color: var(--wall);
+            border: 2px solid var(--wall);
+        }
+
+        .mode-indicator.start-mode {
+            background: rgba(72, 187, 120, 0.1);
+            color: var(--start);
+            border: 2px solid var(--start);
+        }
+
+        .mode-indicator.target-mode {
+            background: rgba(245, 101, 101, 0.1);
+            color: var(--target);
+            border: 2px solid var(--target);
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .position-info {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            padding: 10px;
+            background: var(--light);
+            border-radius: 10px;
+            font-size: 0.85rem;
+        }
+
+        .position-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .position-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                position: static;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            :root {
+                --cell-size: 18px;
+            }
+            
+            #grid {
+                grid-template-columns: repeat(30, var(--cell-size));
+                grid-template-rows: repeat(20, var(--cell-size));
+            }
+            
+            .stats-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Pathfinding Visualizer</h1>
+            <p class="subtitle">Explore and compare different pathfinding algorithms in real-time</p>
+        </header>
+
+        <div class="main-content">
+            <aside class="sidebar">
+                <div class="mode-indicator" id="modeIndicator">
+                    Click on the grid to place
+                </div>
+
+                <div class="control-section">
+                    <h3>Edit Mode</h3>
+                    <button id="wallModeBtn" class="btn btn-secondary active">
+                        <span>⬚</span> Draw Walls
+                    </button>
+                    <button id="startModeBtn" class="btn btn-success">
+                        <span>●</span> Move Start
+                    </button>
+                    <button id="targetModeBtn" class="btn btn-danger">
+                        <span>●</span> Move Target
+                    </button>
+                    <div class="position-info">
+                        <div class="position-item">
+                            <div class="position-color" style="background: var(--start);"></div>
+                            <span id="startPos">S: (5, 5)</span>
+                        </div>
+                        <div class="position-item">
+                            <div class="position-color" style="background: var(--target);"></div>
+                            <span id="targetPos">T: (14, 24)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-section">
+                    <h3>Algorithm Selection</h3>
+                    <select id="algorithm" class="algorithm-select">
+                        <option value="bfs">Breadth-First Search (BFS)</option>
+                        <option value="dfs">Depth-First Search (DFS)</option>
+                        <option value="dijkstra">Dijkstra's Algorithm</option>
+                        <option value="greedy">Greedy Best-First Search</option>
+                        <option value="astar">A* Search Algorithm</option>
+                    </select>
+                    <div id="algorithmInfo" class="algorithm-info">
+                        Select an algorithm to see its description
+                    </div>
+                </div>
+
+                <div class="control-section">
+                    <h3>Animation Speed</h3>
+                    <div class="speed-control">
+                        <input type="range" id="speed" class="speed-slider" min="1" max="100" value="50">
+                        <div class="speed-label">
+                            <span>Slow</span>
+                            <span id="speedValue">50ms</span>
+                            <span>Fast</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-section">
+                    <h3>Options</h3>
+                    <div class="options-group">
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" id="diagonalMovement">
+                            <label for="diagonalMovement">Allow Diagonal Movement</label>
+                        </div>
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" id="showSteps">
+                            <label for="showSteps">Show Step-by-Step</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-section">
+                    <h3>Controls</h3>
+                    <button id="startBtn" class="btn btn-primary">
+                        <span>▶</span> Start Visualization
+                    </button>
+                    <button id="clearPathBtn" class="btn btn-secondary">
+                        <span>↻</span> Clear Path
+                    </button>
+                    <button id="clearWallsBtn" class="btn btn-secondary">
+                        <span>⬚</span> Clear Walls
+                    </button>
+                    <button id="mazeBtn" class="btn btn-secondary">
+                        <span>⚏</span> Generate Maze
+                    </button>
+                    <button id="resetBtn" class="btn btn-danger">
+                        <span>✕</span> Reset All
+                    </button>
+                </div>
+            </aside>
+
+            <main class="grid-wrapper">
+                <div id="grid"></div>
+                
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <div class="stat-value" id="visitedCount">0</div>
+                        <div class="stat-label">Nodes Visited</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="pathLength">0</div>
+                        <div class="stat-label">Path Length</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="timeElapsed">0ms</div>
+                        <div class="stat-label">Time Elapsed</div>
+                    </div>
+                </div>
+
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: var(--start);"></div>
+                        <span>Start</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: var(--target);"></div>
+                        <span>Target</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: var(--wall);"></div>
+                        <span>Wall</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: var(--visited);"></div>
+                        <span>Visited</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: var(--path);"></div>
+                        <span>Path</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: var(--current);"></div>
+                        <span>Current</span>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // Algorithm descriptions
+        const algorithmDescriptions = {
+            bfs: "Breadth-First Search explores all nodes at the present depth before moving on to nodes at the next depth level. Guarantees the shortest path in unweighted graphs.",
+            dfs: "Depth-First Search explores as far as possible along each branch before backtracking. Does not guarantee the shortest path but uses less memory.",
+            dijkstra: "Dijkstra's Algorithm finds the shortest path between nodes in a weighted graph. It's guaranteed to find the optimal path but can be slower.",
+            greedy: "Greedy Best-First Search uses only the heuristic to determine which node to visit next. It's fast but doesn't guarantee the shortest path.",
+            astar: "A* Search combines the benefits of Dijkstra's Algorithm and Greedy Search. It uses both the actual cost and heuristic to find the optimal path efficiently."
+        };
+
+        // Grid configuration
+        const ROWS = 20;
+        const COLS = 30;
+        
+        // Cell types
+        const CELL_TYPES = {
+            EMPTY: 'empty',
+            WALL: 'wall',
+            START: 'start',
+            TARGET: 'target',
+            VISITED: 'visited',
+            PATH: 'path',
+            CURRENT: 'current'
+        };
+        
+        // Edit modes
+        const EDIT_MODES = {
+            WALL: 'wall',
+            START: 'start',
+            TARGET: 'target'
+        };
+        
+        // Grid state
+        let grid = [];
+        let startNode = { row: 5, col: 5 };
+        let targetNode = { row: 14, col: 24 };
+        let isMouseDown = false;
+        let isRunning = false;
+        let animationSpeed = 50;
+        let allowDiagonal = false;
+        let showSteps = false;
+        let editMode = EDIT_MODES.WALL;
+        
+        // Initialize grid
+        function initGrid() {
+            const gridElement = document.getElementById('grid');
+            gridElement.innerHTML = '';
+            grid = [];
+            
+            for (let row = 0; row < ROWS; row++) {
+                grid[row] = [];
+                for (let col = 0; col < COLS; col++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('cell');
+                    cell.dataset.row = row;
+                    cell.dataset.col = col;
+                    
+                    // Set start and target nodes
+                    if (row === startNode.row && col === startNode.col) {
+                        cell.classList.add('start');
+                        grid[row][col] = CELL_TYPES.START;
+                    } else if (row === targetNode.row && col === targetNode.col) {
+                        cell.classList.add('target');
+                        grid[row][col] = CELL_TYPES.TARGET;
+                    } else {
+                        grid[row][col] = CELL_TYPES.EMPTY;
+                    }
+                    
+                    // Add event listeners
+                    cell.addEventListener('mousedown', handleCellMouseDown);
+                    cell.addEventListener('mouseenter', handleCellMouseEnter);
+                    cell.addEventListener('contextmenu', handleCellRightClick);
+                    cell.addEventListener('mouseover', handleCellHover);
+                    cell.addEventListener('mouseout', handleCellHoverOut);
+                    
+                    gridElement.appendChild(cell);
+                }
+            }
+            
+            // Add global mouse event listeners
+            document.addEventListener('mouseup', handleMouseUp);
+            
+            // Update position display
+            updatePositionDisplay();
+        }
+        
+        // Update position display
+        function updatePositionDisplay() {
+            document.getElementById('startPos').textContent = `S: (${startNode.row}, ${startNode.col})`;
+            document.getElementById('targetPos').textContent = `T: (${targetNode.row}, ${targetNode.col})`;
+        }
+        
+        // Handle cell hover
+        function handleCellHover(e) {
+            if (isRunning) return;
+            
+            const row = parseInt(e.target.dataset.row);
+            const col = parseInt(e.target.dataset.col);
+            
+            // Remove all hover classes
+            document.querySelectorAll('.hover-start, .hover-target').forEach(cell => {
+                cell.classList.remove('hover-start', 'hover-target');
+            });
+            
+            if (editMode === EDIT_MODES.START) {
+                if (!(row === targetNode.row && col === targetNode.col)) {
+                    e.target.classList.add('hover-start');
+                }
+            } else if (editMode === EDIT_MODES.TARGET) {
+                if (!(row === startNode.row && col === startNode.col)) {
+                    e.target.classList.add('hover-target');
+                }
+            }
+        }
+        
+        // Handle cell hover out
+        function handleCellHoverOut(e) {
+            e.target.classList.remove('hover-start', 'hover-target');
+        }
+        
+        // Handle cell mouse down
+        function handleCellMouseDown(e) {
+            if (isRunning) return;
+            
+            e.preventDefault();
+            isMouseDown = true;
+            
+            const row = parseInt(e.target.dataset.row);
+            const col = parseInt(e.target.dataset.col);
+            
+            if (editMode === EDIT_MODES.WALL) {
+                // Don't allow changing start or target
+                if ((row === startNode.row && col === startNode.col) || 
+                    (row === targetNode.row && col === targetNode.col)) {
+                    return;
+                }
+                toggleWall(row, col);
+            } else if (editMode === EDIT_MODES.START) {
+                // Don't place start on target
+                if (!(row === targetNode.row && col === targetNode.col)) {
+                    moveStart(row, col);
+                }
+            } else if (editMode === EDIT_MODES.TARGET) {
+                // Don't place target on start
+                if (!(row === startNode.row && col === startNode.col)) {
+                    moveTarget(row, col);
+                }
+            }
+        }
+        
+        // Handle cell mouse enter
+        function handleCellMouseEnter(e) {
+            if (!isMouseDown || isRunning) return;
+            
+            const row = parseInt(e.target.dataset.row);
+            const col = parseInt(e.target.dataset.col);
+            
+            if (editMode === EDIT_MODES.WALL) {
+                // Don't allow changing start or target
+                if ((row === startNode.row && col === startNode.col) || 
+                    (row === targetNode.row && col === targetNode.col)) {
+                    return;
+                }
+                
+                // Add wall when dragging
+                if (grid[row][col] === CELL_TYPES.EMPTY) {
+                    grid[row][col] = CELL_TYPES.WALL;
+                    e.target.classList.add('wall');
+                }
+            }
+        }
+        
+        // Handle cell right click
+        function handleCellRightClick(e) {
+            e.preventDefault();
+            
+            if (isRunning) return;
+            
+            const row = parseInt(e.target.dataset.row);
+            const col = parseInt(e.target.dataset.col);
+            
+            if (editMode === EDIT_MODES.WALL) {
+                // Don't allow changing start or target
+                if ((row === startNode.row && col === startNode.col) || 
+                    (row === targetNode.row && col === targetNode.col)) {
+                    return;
+                }
+                
+                // Remove wall
+                if (grid[row][col] === CELL_TYPES.WALL) {
+                    grid[row][col] = CELL_TYPES.EMPTY;
+                    e.target.classList.remove('wall');
+                }
+            }
+        }
+        
+        // Handle mouse up
+        function handleMouseUp() {
+            isMouseDown = false;
+        }
+        
+        // Move start position
+        function moveStart(newRow, newCol) {
+            // Clear old start position
+            const oldCell = document.querySelector(`[data-row="${startNode.row}"][data-col="${startNode.col}"]`);
+            oldCell.classList.remove('start');
+            grid[startNode.row][startNode.col] = CELL_TYPES.EMPTY;
+            
+            // Set new start position
+            startNode = { row: newRow, col: newCol };
+            const newCell = document.querySelector(`[data-row="${newRow}"][data-col="${newCol}"]`);
+            newCell.classList.add('start');
+            grid[newRow][newCol] = CELL_TYPES.START;
+            
+            // Clear any existing path
+            clearPath();
+            
+            // Update position display
+            updatePositionDisplay();
+        }
+        
+        // Move target position
+        function moveTarget(newRow, newCol) {
+            // Clear old target position
+            const oldCell = document.querySelector(`[data-row="${targetNode.row}"][data-col="${targetNode.col}"]`);
+            oldCell.classList.remove('target');
+            grid[targetNode.row][targetNode.col] = CELL_TYPES.EMPTY;
+            
+            // Set new target position
+            targetNode = { row: newRow, col: newCol };
+            const newCell = document.querySelector(`[data-row="${newRow}"][data-col="${newCol}"]`);
+            newCell.classList.add('target');
+            grid[newRow][newCol] = CELL_TYPES.TARGET;
+            
+            // Clear any existing path
+            clearPath();
+            
+            // Update position display
+            updatePositionDisplay();
+        }
+        
+        // Toggle wall
+        function toggleWall(row, col) {
+            const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+            
+            if (grid[row][col] === CELL_TYPES.WALL) {
+                grid[row][col] = CELL_TYPES.EMPTY;
+                cell.classList.remove('wall');
+            } else if (grid[row][col] === CELL_TYPES.EMPTY) {
+                grid[row][col] = CELL_TYPES.WALL;
+                cell.classList.add('wall');
+            }
+        }
+        
+        // Clear path
+        function clearPath() {
+            for (let row = 0; row < ROWS; row++) {
+                for (let col = 0; col < COLS; col++) {
+                    if (grid[row][col] === CELL_TYPES.VISITED || 
+                        grid[row][col] === CELL_TYPES.PATH || 
+                        grid[row][col] === CELL_TYPES.CURRENT) {
+                        grid[row][col] = CELL_TYPES.EMPTY;
+                        const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                        cell.classList.remove('visited', 'path', 'current');
+                    }
+                }
+            }
+            
+            // Reset stats
+            document.getElementById('visitedCount').textContent = '0';
+            document.getElementById('pathLength').textContent = '0';
+            document.getElementById('timeElapsed').textContent = '0ms';
+        }
+        
+        // Clear walls
+        function clearWalls() {
+            for (let row = 0; row < ROWS; row++) {
+                for (let col = 0; col < COLS; col++) {
+                    if (grid[row][col] === CELL_TYPES.WALL) {
+                        grid[row][col] = CELL_TYPES.EMPTY;
+                        const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                        cell.classList.remove('wall');
+                    }
+                }
+            }
+        }
+        
+        // Reset grid
+        function resetGrid() {
+            clearPath();
+            clearWalls();
+        }
+        
+        // Generate maze using recursive backtracking
+        function generateMaze() {
+            resetGrid();
+            
+            // Fill with walls
+            for (let row = 0; row < ROWS; row++) {
+                for (let col = 0; col < COLS; col++) {
+                    if ((row === startNode.row && col === startNode.col) || 
+                        (row === targetNode.row && col === targetNode.col)) {
+                        continue;
+                    }
+                    grid[row][col] = CELL_TYPES.WALL;
+                    const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                    cell.classList.add('wall');
+                }
+            }
+            
+            // Recursive backtracking maze generation
+            const visited = new Set();
+            const stack = [];
+            const start = { row: 1, col: 1 };
+            
+            grid[start.row][start.col] = CELL_TYPES.EMPTY;
+            document.querySelector(`[data-row="${start.row}"][data-col="${start.col}"]`).classList.remove('wall');
+            visited.add(`${start.row},${start.col}`);
+            stack.push(start);
+            
+            while (stack.length > 0) {
+                const current = stack[stack.length - 1];
+                const neighbors = getUnvisitedMazeNeighbors(current.row, current.col, visited);
+                
+                if (neighbors.length > 0) {
+                    const next = neighbors[Math.floor(Math.random() * neighbors.length)];
+                    removeWallBetween(current, next);
+                    visited.add(`${next.row},${next.col}`);
+                    stack.push(next);
+                } else {
+                    stack.pop();
+                }
+            }
+            
+            // Ensure start and target are clear
+            grid[startNode.row][startNode.col] = CELL_TYPES.START;
+            grid[targetNode.row][targetNode.col] = CELL_TYPES.TARGET;
+            document.querySelector(`[data-row="${startNode.row}"][data-col="${startNode.col}"]`).classList.add('start');
+            document.querySelector(`[data-row="${targetNode.row}"][data-col="${targetNode.col}"]`).classList.add('target');
+        }
+        
+        // Get unvisited maze neighbors
+        function getUnvisitedMazeNeighbors(row, col, visited) {
+            const neighbors = [];
+            const directions = [
+                [-2, 0], // up
+                [0, 2],  // right
+                [2, 0],  // down
+                [0, -2]  // left
+            ];
+            
+            for (const [dRow, dCol] of directions) {
+                const newRow = row + dRow;
+                const newCol = col + dCol;
+                
+                if (newRow > 0 && newRow < ROWS - 1 && newCol > 0 && newCol < COLS - 1) {
+                    if (!visited.has(`${newRow},${newCol}`)) {
+                        neighbors.push({ row: newRow, col: newCol });
+                    }
+                }
+            }
+            
+            return neighbors;
+        }
+        
+        // Remove wall between two cells
+        function removeWallBetween(cell1, cell2) {
+            const wallRow = (cell1.row + cell2.row) / 2;
+            const wallCol = (cell1.col + cell2.col) / 2;
+            
+            grid[cell2.row][cell2.col] = CELL_TYPES.EMPTY;
+            grid[wallRow][wallCol] = CELL_TYPES.EMPTY;
+            
+            document.querySelector(`[data-row="${cell2.row}"][data-col="${cell2.col}"]`).classList.remove('wall');
+            document.querySelector(`[data-row="${wallRow}"][data-col="${wallCol}"]`).classList.remove('wall');
+        }
+        
+        // Get neighbors
+        function getNeighbors(row, col) {
+            const neighbors = [];
+            const directions = allowDiagonal ? 
+                [
+                    [-1, 0], [0, 1], [1, 0], [0, -1], // cardinal
+                    [-1, -1], [-1, 1], [1, -1], [1, 1] // diagonal
+                ] :
+                [
+                    [-1, 0], [0, 1], [1, 0], [0, -1] // cardinal only
+                ];
+            
+            for (const [dRow, dCol] of directions) {
+                const newRow = row + dRow;
+                const newCol = col + dCol;
+                
+                // Check if neighbor is within bounds
+                if (newRow >= 0 && newRow < ROWS && newCol >= 0 && newCol < COLS) {
+                    // Check if neighbor is not a wall
+                    if (grid[newRow][newCol] !== CELL_TYPES.WALL) {
+                        // For diagonal movement, check if path is clear
+                        if (allowDiagonal && Math.abs(dRow) === 1 && Math.abs(dCol) === 1) {
+                            if (grid[row + dRow][col] !== CELL_TYPES.WALL && 
+                                grid[row][col + dCol] !== CELL_TYPES.WALL) {
+                                neighbors.push({ row: newRow, col: newCol });
+                            }
+                        } else {
+                            neighbors.push({ row: newRow, col: newCol });
+                        }
+                    }
+                }
+            }
+            
+            return neighbors;
+        }
+        
+        // Heuristic function (Manhattan or Euclidean distance)
+        function heuristic(row1, col1, row2, col2) {
+            if (allowDiagonal) {
+                // Euclidean distance for diagonal movement
+                return Math.sqrt(Math.pow(row1 - row2, 2) + Math.pow(col1 - col2, 2));
+            } else {
+                // Manhattan distance for cardinal movement
+                return Math.abs(row1 - row2) + Math.abs(col1 - col2);
+            }
+        }
+        
+        // Sleep function for animation
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+        
+        // Visualize cell
+        async function visualizeCell(row, col, type) {
+            const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+            
+            // Don't change start or target cells
+            if ((row === startNode.row && col === startNode.col) || 
+                (row === targetNode.row && col === targetNode.col)) {
+                return;
+            }
+            
+            // Remove previous classes
+            cell.classList.remove('visited', 'path', 'current');
+            
+            // Add new class
+            if (type === CELL_TYPES.VISITED) {
+                cell.classList.add('visited');
+            } else if (type === CELL_TYPES.PATH) {
+                cell.classList.add('path');
+            } else if (type === CELL_TYPES.CURRENT) {
+                cell.classList.add('current');
+            }
+            
+            // Update grid state
+            grid[row][col] = type;
+            
+            // Sleep for animation
+            if (showSteps) {
+                await sleep(101 - animationSpeed);
+            }
+        }
+        
+        // Reconstruct path
+        async function reconstructPath(cameFrom, current) {
+            const path = [];
+            let node = current;
+            
+            while (node) {
+                path.unshift(node);
+                node = cameFrom[`${node.row},${node.col}`];
+            }
+            
+            // Visualize path
+            for (let i = 1; i < path.length - 1; i++) {
+                await visualizeCell(path[i].row, path[i].col, CELL_TYPES.PATH);
+            }
+            
+            return path.length;
+        }
+        
+        // BFS Algorithm - Optimized
+        async function bfs() {
+            const queue = [startNode];
+            const visited = new Set([`${startNode.row},${startNode.col}`]);
+            const cameFrom = {};
+            let visitedCount = 0;
+            
+            while (queue.length > 0) {
+                const current = queue.shift();
+                visitedCount++;
+                
+                // Check if we reached the target
+                if (current.row === targetNode.row && current.col === targetNode.col) {
+                    const pathLength = await reconstructPath(cameFrom, current);
+                    return { visitedCount, pathLength };
+                }
+                
+                // Visualize current node
+                if (!(current.row === startNode.row && current.col === startNode.col)) {
+                    await visualizeCell(current.row, current.col, CELL_TYPES.CURRENT);
+                }
+                
+                // Get neighbors
+                const neighbors = getNeighbors(current.row, current.col);
+                
+                for (const neighbor of neighbors) {
+                    const key = `${neighbor.row},${neighbor.col}`;
+                    
+                    if (!visited.has(key)) {
+                        visited.add(key);
+                        cameFrom[key] = current;
+                        queue.push(neighbor);
+                        
+                        // Visualize visited node
+                        if (!(neighbor.row === targetNode.row && neighbor.col === targetNode.col)) {
+                            await visualizeCell(neighbor.row, neighbor.col, CELL_TYPES.VISITED);
+                        }
+                    }
+                }
+            }
+            
+            // No path found
+            return { visitedCount, pathLength: 0 };
+        }
+        
+        // DFS Algorithm - Optimized
+        async function dfs() {
+            const stack = [startNode];
+            const visited = new Set([`${startNode.row},${startNode.col}`]);
+            const cameFrom = {};
+            let visitedCount = 0;
+            
+            while (stack.length > 0) {
+                const current = stack.pop();
+                visitedCount++;
+                
+                // Check if we reached the target
+                if (current.row === targetNode.row && current.col === targetNode.col) {
+                    const pathLength = await reconstructPath(cameFrom, current);
+                    return { visitedCount, pathLength };
+                }
+                
+                // Visualize current node
+                if (!(current.row === startNode.row && current.col === startNode.col)) {
+                    await visualizeCell(current.row, current.col, CELL_TYPES.CURRENT);
+                }
+                
+                // Get neighbors
+                const neighbors = getNeighbors(current.row, current.col);
+                
+                for (const neighbor of neighbors) {
+                    const key = `${neighbor.row},${neighbor.col}`;
+                    
+                    if (!visited.has(key)) {
+                        visited.add(key);
+                        cameFrom[key] = current;
+                        stack.push(neighbor);
+                        
+                        // Visualize visited node
+                        if (!(neighbor.row === targetNode.row && neighbor.col === targetNode.col)) {
+                            await visualizeCell(neighbor.row, neighbor.col, CELL_TYPES.VISITED);
+                        }
+                    }
+                }
+            }
+            
+            // No path found
+            return { visitedCount, pathLength: 0 };
+        }
+        
+        // Dijkstra's Algorithm - Optimized
+        async function dijkstra() {
+            const distances = {};
+            const cameFrom = {};
+            const unvisited = new Set();
+            let visitedCount = 0;
+            
+            // Initialize distances
+            for (let row = 0; row < ROWS; row++) {
+                for (let col = 0; col < COLS; col++) {
+                    const key = `${row},${col}`;
+                    distances[key] = Infinity;
+                    unvisited.add(key);
+                }
+            }
+            
+            const startKey = `${startNode.row},${startNode.col}`;
+            distances[startKey] = 0;
+            
+            while (unvisited.size > 0) {
+                // Find node with minimum distance
+                let currentKey = null;
+                let minDistance = Infinity;
+                
+                for (const key of unvisited) {
+                    if (distances[key] < minDistance) {
+                        minDistance = distances[key];
+                        currentKey = key;
+                    }
+                }
+                
+                if (currentKey === null || minDistance === Infinity) break;
+                
+                unvisited.delete(currentKey);
+                const [row, col] = currentKey.split(',').map(Number);
+                const current = { row, col };
+                visitedCount++;
+                
+                // Check if we reached the target
+                if (current.row === targetNode.row && current.col === targetNode.col) {
+                    const pathLength = await reconstructPath(cameFrom, current);
+                    return { visitedCount, pathLength };
+                }
+                
+                // Visualize current node
+                if (!(current.row === startNode.row && current.col === startNode.col)) {
+                    await visualizeCell(current.row, current.col, CELL_TYPES.CURRENT);
+                }
+                
+                // Get neighbors
+                const neighbors = getNeighbors(current.row, current.col);
+                
+                for (const neighbor of neighbors) {
+                    const neighborKey = `${neighbor.row},${neighbor.col}`;
+                    
+                    if (unvisited.has(neighborKey)) {
+                        const distance = distances[currentKey] + 1;
+                        
+                        if (distance < distances[neighborKey]) {
+                            distances[neighborKey] = distance;
+                            cameFrom[neighborKey] = current;
+                            
+                            // Visualize visited node
+                            if (!(neighbor.row === targetNode.row && neighbor.col === targetNode.col)) {
+                                await visualizeCell(neighbor.row, neighbor.col, CELL_TYPES.VISITED);
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // No path found
+            return { visitedCount, pathLength: 0 };
+        }
+        
+        // Greedy Best-First Search - Optimized
+        async function greedy() {
+            const cameFrom = {};
+            const openSet = [];
+            const closedSet = new Set();
+            let visitedCount = 0;
+            
+            openSet.push({
+                ...startNode,
+                priority: heuristic(startNode.row, startNode.col, targetNode.row, targetNode.col)
+            });
+            
+            while (openSet.length > 0) {
+                // Sort by priority (heuristic)
+                openSet.sort((a, b) => a.priority - b.priority);
+                const current = openSet.shift();
+                const currentKey = `${current.row},${current.col}`;
+                
+                if (closedSet.has(currentKey)) continue;
+                closedSet.add(currentKey);
+                visitedCount++;
+                
+                // Check if we reached the target
+                if (current.row === targetNode.row && current.col === targetNode.col) {
+                    const pathLength = await reconstructPath(cameFrom, current);
+                    return { visitedCount, pathLength };
+                }
+                
+                // Visualize current node
+                if (!(current.row === startNode.row && current.col === startNode.col)) {
+                    await visualizeCell(current.row, current.col, CELL_TYPES.CURRENT);
+                }
+                
+                // Get neighbors
+                const neighbors = getNeighbors(current.row, current.col);
+                
+                for (const neighbor of neighbors) {
+                    const neighborKey = `${neighbor.row},${neighbor.col}`;
+                    
+                    if (!closedSet.has(neighborKey)) {
+                        cameFrom[neighborKey] = current;
+                        openSet.push({
+                            ...neighbor,
+                            priority: heuristic(neighbor.row, neighbor.col, targetNode.row, targetNode.col)
+                        });
+                        
+                        // Visualize visited node
+                        if (!(neighbor.row === targetNode.row && neighbor.col === targetNode.col)) {
+                            await visualizeCell(neighbor.row, neighbor.col, CELL_TYPES.VISITED);
+                        }
+                    }
+                }
+            }
+            
+            // No path found
+            return { visitedCount, pathLength: 0 };
+        }
+        
+        // A* Search Algorithm - Optimized
+        async function astar() {
+            const gScore = {};
+            const fScore = {};
+            const cameFrom = {};
+            const openSet = [];
+            const closedSet = new Set();
+            let visitedCount = 0;
+            
+            // Initialize scores
+            for (let row = 0; row < ROWS; row++) {
+                for (let col = 0; col < COLS; col++) {
+                    const key = `${row},${col}`;
+                    gScore[key] = Infinity;
+                    fScore[key] = Infinity;
+                }
+            }
+            
+            const startKey = `${startNode.row},${startNode.col}`;
+            gScore[startKey] = 0;
+            fScore[startKey] = heuristic(startNode.row, startNode.col, targetNode.row, targetNode.col);
+            openSet.push({ ...startNode, gScore: 0, fScore: fScore[startKey] });
+            
+            while (openSet.length > 0) {
+                // Find node with lowest fScore
+                let currentIndex = 0;
+                for (let i = 1; i < openSet.length; i++) {
+                    if (openSet[i].fScore < openSet[currentIndex].fScore) {
+                        currentIndex = i;
+                    }
+                }
+                
+                const current = openSet[currentIndex];
+                const currentKey = `${current.row},${current.col}`;
+                
+                // Check if we reached the target
+                if (current.row === targetNode.row && current.col === targetNode.col) {
+                    const pathLength = await reconstructPath(cameFrom, current);
+                    return { visitedCount, pathLength };
+                }
+                
+                openSet.splice(currentIndex, 1);
+                closedSet.add(currentKey);
+                visitedCount++;
+                
+                // Visualize current node
+                if (!(current.row === startNode.row && current.col === startNode.col)) {
+                    await visualizeCell(current.row, current.col, CELL_TYPES.CURRENT);
+                }
+                
+                // Get neighbors
+                const neighbors = getNeighbors(current.row, current.col);
+                
+                for (const neighbor of neighbors) {
+                    const neighborKey = `${neighbor.row},${neighbor.col}`;
+                    
+                    if (closedSet.has(neighborKey)) continue;
+                    
+                    const tentativeGScore = gScore[currentKey] + 1;
+                    
+                    if (tentativeGScore < gScore[neighborKey]) {
+                        cameFrom[neighborKey] = current;
+                        gScore[neighborKey] = tentativeGScore;
+                        fScore[neighborKey] = gScore[neighborKey] + heuristic(neighbor.row, neighbor.col, targetNode.row, targetNode.col);
+                        
+                        // Check if neighbor is already in openSet
+                        const index = openSet.findIndex(node => node.row === neighbor.row && node.col === neighbor.col);
+                        
+                        if (index === -1) {
+                            openSet.push({
+                                ...neighbor,
+                                gScore: gScore[neighborKey],
+                                fScore: fScore[neighborKey]
+                            });
+                        } else {
+                            openSet[index].gScore = gScore[neighborKey];
+                            openSet[index].fScore = fScore[neighborKey];
+                        }
+                        
+                        // Visualize visited node
+                        if (!(neighbor.row === targetNode.row && neighbor.col === targetNode.col)) {
+                            await visualizeCell(neighbor.row, neighbor.col, CELL_TYPES.VISITED);
+                        }
+                    }
+                }
+            }
+            
+            // No path found
+            return { visitedCount, pathLength: 0 };
+        }
+        
+        // Start visualization
+        async function startVisualization() {
+            if (isRunning) return;
+            
+            isRunning = true;
+            clearPath();
+            
+            // Disable controls
+            const buttons = document.querySelectorAll('.btn');
+            buttons.forEach(btn => btn.disabled = true);
+            document.getElementById('algorithm').disabled = true;
+            
+            // Get selected algorithm
+            const algorithm = document.getElementById('algorithm').value;
+            
+            // Start timer
+            const startTime = performance.now();
+            
+            // Run algorithm
+            let result;
+            switch (algorithm) {
+                case 'bfs':
+                    result = await bfs();
+                    break;
+                case 'dfs':
+                    result = await dfs();
+                    break;
+                case 'dijkstra':
+                    result = await dijkstra();
+                    break;
+                case 'greedy':
+                    result = await greedy();
+                    break;
+                case 'astar':
+                    result = await astar();
+                    break;
+            }
+            
+            // Calculate elapsed time
+            const endTime = performance.now();
+            const elapsedTime = Math.round(endTime - startTime);
+            
+            // Update stats
+            document.getElementById('visitedCount').textContent = result.visitedCount;
+            document.getElementById('pathLength').textContent = result.pathLength;
+            document.getElementById('timeElapsed').textContent = `${elapsedTime}ms`;
+            
+            // Re-enable controls
+            buttons.forEach(btn => btn.disabled = false);
+            document.getElementById('algorithm').disabled = false;
+            
+            isRunning = false;
+        }
+        
+        // Update algorithm info
+        function updateAlgorithmInfo() {
+            const algorithm = document.getElementById('algorithm').value;
+            document.getElementById('algorithmInfo').textContent = algorithmDescriptions[algorithm];
+        }
+        
+        // Set edit mode
+        function setEditMode(mode) {
+            editMode = mode;
+            
+            // Update button states
+            document.querySelectorAll('#wallModeBtn, #startModeBtn, #targetModeBtn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Update mode indicator
+            const indicator = document.getElementById('modeIndicator');
+            indicator.classList.remove('wall-mode', 'start-mode', 'target-mode');
+            
+            if (mode === EDIT_MODES.WALL) {
+                document.getElementById('wallModeBtn').classList.add('active');
+                indicator.textContent = 'Click and drag to draw walls';
+                indicator.classList.add('wall-mode');
+            } else if (mode === EDIT_MODES.START) {
+                document.getElementById('startModeBtn').classList.add('active');
+                indicator.textContent = 'Click to place the start point';
+                indicator.classList.add('start-mode');
+            } else if (mode === EDIT_MODES.TARGET) {
+                document.getElementById('targetModeBtn').classList.add('active');
+                indicator.textContent = 'Click to place the target point';
+                indicator.classList.add('target-mode');
+            }
+            
+            indicator.classList.add('active');
+        }
+        
+        // Event listeners
+        document.getElementById('startBtn').addEventListener('click', startVisualization);
+        document.getElementById('clearPathBtn').addEventListener('click', clearPath);
+        document.getElementById('clearWallsBtn').addEventListener('click', clearWalls);
+        document.getElementById('resetBtn').addEventListener('click', resetGrid);
+        document.getElementById('mazeBtn').addEventListener('click', generateMaze);
+        document.getElementById('algorithm').addEventListener('change', updateAlgorithmInfo);
+        
+        document.getElementById('speed').addEventListener('input', (e) => {
+            animationSpeed = parseInt(e.target.value);
+            document.getElementById('speedValue').textContent = `${animationSpeed}ms`;
+        });
+        
+        document.getElementById('diagonalMovement').addEventListener('change', (e) => {
+            allowDiagonal = e.target.checked;
+        });
+        
+        document.getElementById('showSteps').addEventListener('change', (e) => {
+            showSteps = e.target.checked;
+        });
+        
+        // Edit mode buttons
+        document.getElementById('wallModeBtn').addEventListener('click', () => setEditMode(EDIT_MODES.WALL));
+        document.getElementById('startModeBtn').addEventListener('click', () => setEditMode(EDIT_MODES.START));
+        document.getElementById('targetModeBtn').addEventListener('click', () => setEditMode(EDIT_MODES.TARGET));
+        
+        // Initialize
+        initGrid();
+        updateAlgorithmInfo();
+        setEditMode(EDIT_MODES.WALL);
+    </script>
+</body>
+</html>
