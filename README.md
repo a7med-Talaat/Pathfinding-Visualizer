@@ -12,7 +12,7 @@ Built using only **HTML, CSS, and Vanilla JavaScript**, this project emphasizes 
     * **Dijkstra's Algorithm:** Guarantees the optimal path in weighted graphs (treating all cells as uniform weight here).
     * **Greedy Best-First Search:** Prioritizes speed using only heuristic distance.
     * **A\* Search Algorithm:** Combines path cost and heuristic for optimal and efficient performance.
-* **Interactive Design (God Mode):**
+* **Interactive Design:**
     * **Draw Walls:** Click and drag to instantly place and erase wall obstacles.
     * **Dynamic Nodes:** Easily move the **Start (S)** and **Target (T)** nodes to any valid position on the grid.
     * **Maze Generation:** Generate complex, instant mazes using the **Recursive Backtracking** method.
