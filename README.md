@@ -34,22 +34,7 @@ This project showcases the power of fundamental web technologies:
 | **CSS3** | Styling & Aesthetics | Modern, responsive design using Flexbox and Grid. Includes **complex custom animations** (`@keyframes`) for visited nodes and the final path. |
 | **Vanilla JavaScript** | Core Logic | Implements all five algorithms (BFS, DFS, Dijkstra's, Greedy, A\*) and handles all user interactions and real-time DOM manipulation. **No external libraries are used.** |
 
-## 🛠️ How to Run Locally
-
-Since this is a single-page application, getting it running is fast and simple:
-
-1.  **Clone the repository:**
-    ```bash
-    git clone [Your Repository URL Here]
-    ```
-2.  **Navigate to the directory:**
-    ```bash
-    cd pathfinding-visualizer-interactive
-    ```
-3.  **Open the file:**
-    Simply double-click the `index.html` file in your operating system's file explorer, or open it directly in your preferred web browser.
-
 ## 🖼️ Visual Showcase
 
+<img width="1905" height="958" alt="image" src="https://github.com/user-attachments/assets/18bcfc35-486d-4a31-9af4-2101e38e79c3" />
 
-*(Replace this with a high-quality screenshot or a GIF demonstrating the animation!)*
