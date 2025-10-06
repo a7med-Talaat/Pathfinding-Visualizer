@@ -1,8 +1,12 @@
-# 🌟 Pathfinding Algorithm Visualizer - Interactive Edition
+# 🌟 Pathfinding Algorithm Visualizer
 
 A stunning, high-performance web application designed to bring the world of **Graph Theory** and **Search Algorithms** to life. This interactive tool allows users to build custom environments and visually compare how various pathfinding algorithms navigate the challenges.
 
 Built using only **HTML, CSS, and Vanilla JavaScript**, this project emphasizes clean code and powerful, real-time visualization without relying on external libraries or frameworks.
+
+## To access the site 
+
+You can access the site through this link : https://a7med-talaat.github.io/Pathfinding-Visualizer/
 
 ## ✨ Core Features
 
